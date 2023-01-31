@@ -17,8 +17,11 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const description = req.body.description;
   const product = new Product(null, title, imageUrl, description, price);
-  product.save();
-  res.redirect('/');
+  product.save()
+  .then( () => {
+    res.redirect('/');
+  })
+  .catch(err => console.log(err));
 };
 
 exports.getEditProduct = (req,res,next) => {
@@ -28,18 +31,20 @@ exports.getEditProduct = (req,res,next) => {
     return res.redirect('/');
   }
   const prodID = req.params.pId;
-  Product.FindProduct(prodID, (product) => {
-    if(!product) return res.redirect('/');
+  Product.FindProduct(prodID)
+  .then(([product]) => {
+    if(!product[0]) return res.redirect('/');
     res.render('admin/edit-product', {
       pageTitle: 'Edit Product',
       path: '/admin/edit-product',
       editing: editMode,
-      product: product,
+      product: product[0],
       formsCSS: true,
       productCSS: true,
       activeAddProduct: true
     });
-  });
+  })
+  .catch((err) => console.log(err)); 
 }
 
 exports.postEditProducts = (req,res,next) => {
@@ -50,27 +55,30 @@ exports.postEditProducts = (req,res,next) => {
   const id = req.body.productId;
   const product = new Product(id, title, imageUrl, description, price);
   
-  product.update();
-
-  res.redirect('/');
+  product.update()
+  .then(() => res.redirect('/'))
+  .catch(err => console.log(err));
 }
 
 exports.deleteProduct = (req,res,next) => {
   const prodID = req.params.prdId;
   console.log(prodID);
 
-  Product.delete(prodID);
+  Product.delete(prodID)
+  .then(() => res.redirect('/'))
+  .catch((err) => console.log(err));
 
-  res.redirect('/');
 }
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll(products => {
+  Product.fetchAll()
+  .then(([rows, fieldData]) => {
     res.render('admin/products', {
-      prods: products,
+      prods: rows,
       pageTitle: 'Admin Products',
       path: '/admin/products'
     });
-  });
+  } )
+  .catch(err => console.log(err));
 };
 
